@@ -1,31 +1,33 @@
 # MADE BY: Lisette Spalding
 # PROJECT NAME: python__snake_game
 # FILE NAME: main.py
-# DATE CREATED: 04/01/2021
-# DATE LAST MODIFIED: 04/01/2021
+# DATE CREATED: 03/01/2021
+# DATE LAST MODIFIED: 04/18/2021
 # PYTHON VER. USED: 3.9
 
 ########## IMPORTS ##########
 import sys
 import random as r
 from PIL import Image, ImageTk
-from tkinker import Tk, Frame, Canvas, ALL, NW
+from tkinter import Tk, Frame, Canvas, ALL, NW
 ############ FIN ############
 
 ########## CLASSES ##########
-class Constants:
-        BOARD_WIDTH = 300
-        BOARD_HEIGHT = 300
-        DELAY = 100
-        DOT_SIZE = 10
-        MAX_RAND_POS = 27
+class Constants():
+    """ To Use: Constants()
+    This class defines all the constants that will be used throughout this program. """
+    BOARD_WIDTH = 300
+    BOARD_HEIGHT = 300
+    DELAY = 100
+    DOT_SIZE = 10
+    MAX_RAND_POS = 27
 
 class Board(Canvas):
 
     def __init__(self):
         ## Setting up game
         super().__init__(width = Constants.BOARD_WIDTH, height = Constants.BOARD_HEIGHT,
-                         background = "black", highlightthinkness = 0)
+                         background = "black", highlightthickness = 0)
 
         self.initGame() # Calling the game class
 
@@ -54,7 +56,7 @@ class Board(Canvas):
         # Calling other classes
         self.createObjects()
         self.locateApple()
-        self.bindAll("<Key>", self.onKeyPressed)
+        self.bind_all("<Key>", self.onKeyPressed)
         self.after(Constants.DELAY, self.onTimer)
 
     def loadImages(self):
@@ -78,6 +80,8 @@ class Board(Canvas):
 
         self.create_text(30, 10, text = "Score: {0}".format(self.score),
                          tag = "score", fill = "white")
+        self.create_image(self.appleX, self.appleY, image = self.apple,
+                          anchor = NW, tag = "apple")
         self.create_image(50, 50, image = self.head, anchor = NW, tag = "head")
         self.create_image(30, 50, image = self.dot, anchor = NW, tag = "dot")
         self.create_image(40, 50, image = self.dot, anchor = NW, tag = "dot")
@@ -112,6 +116,7 @@ class Board(Canvas):
         while z < len(items)-1:
             c1 = self.coords(items[z])
             c2 = self.coords(items[z+1])
+            self.move(items[z], c2[0] - c1[0], c2[1] - c1[1])
             z += 1
 
         self.move(head, self.moveX, self.moveY)
@@ -159,7 +164,81 @@ class Board(Canvas):
         self.create_image(self.appleX, self.appleY, anchor = NW,
                           image = self.apple, tag = "apple")
 
-    def onKeyPressed(self):
-        pass
+    def onKeyPressed(self, e):
+        """ To use: self.onKeyPressed(e)
+        This method controls the direction variables with cursor keys. """
+
+        key = e.keysym
+
+        LEFT_CURSOR_KEY = "Left"
+        if key == LEFT_CURSOR_KEY and self.moveX <= 0:
+            self.moveX = -Constants.DOT_SIZE
+            self.moveY = 0
+
+        RIGHT_CURSOR_KEY = "Right"
+        if key == RIGHT_CURSOR_KEY and self.moveX >= 0:
+            self.moveX = 0
+            self.moveY = 0
+
+        RIGHT_CURSOR_KEY = "Up"
+        if key == RIGHT_CURSOR_KEY and self.moveY <= 0:
+            self.moveX = 0
+            self.moveY = -Constants.DOT_SIZE
+
+        DOWN_CURSOR_KEY = "Down"
+        if key == DOWN_CURSOR_KEY and self.moveY >= 0:
+            self.moveX = 0
+            self.moveY = Constants.DOT_SIZE
+
+    def onTimer(self):
+        """ To use: self.onTimer()
+        This method creates a game cycle at each timer event. """
+
+        self.drawScore()
+        self.checkCollisions()
+
+        if self.inGame:
+            self.checkAppleCollision()
+            self.moveSnake()
+            self.after(Constants.DELAY, self.onTimer)
+        else:
+            self.gameOver()
+
+    def drawScore(self):
+        """ To use: self.drawScore()
+        This method draws the score on the screen. """
+
+        score = self.find_withtag("score")
+        self.itemconfigure(score, text="Score: {0}".format(self.score))
+
+    def gameOver(self):
+        """ To use: self.gameOver()
+        This method deletes all objects and draws the game over message. """
+
+        self.delete(ALL)
+        self.create_text(self.winfo_width() / 2, self.winfo_height() / 2,
+                         text = "Game Over with Score {0}".format(self.score),
+                         fill = "white")
+
+class Snake(Frame):
+    """ To use: Snake()
+    This class runs the game and sets up the board using the Board() class. """
+    def __init__(self):
+        super().__init__()
+
+        self.master.title("Snake")
+        self.board = Board()
+        self.pack()
+
+def main():
+    """ To use: main()
+    This function actually runs the game and displays it. """
+
+    root = Tk()
+    nib = Snake()
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
 
 ############ FIN ############
